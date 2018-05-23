@@ -1,0 +1,100 @@
+#: Title    : analisi profili stimati - grafici
+#: Affiliation    : "NFS" <Nuoro.Forestry.School@gmail.com>
+#: Author    : "Roberto Scotti" <scotti@uniss.it>
+#: Author    : "Sergio Campus" <sfcampus@uniss.it>
+#: Date    : 20/02/2015
+#: Version    : -1
+#: Description    : compare estimated profiles
+#: Usage         : <in progress>
+#: Options    : None
+
+#: 20/02/2015   : Initial release
+
+rm(list=ls(all=TRUE))
+require(TapeR)
+require(lattice)
+setwd("~/Documenti/02-RICERCA/Fragiacomo/EDENSO/TapeR")
+setwd("../From_NFSonUniSS_site")
+
+load("Pinus_pinaster_Pattada_all.taper.pars.rdata")
+
+test_pop <- data.frame(d130 = seq(20, 50, 10))
+test_pop$h_tot <- 20
+d_f <- data.frame()
+for(i in 1:nrow(test_pop)) {
+  d130 <- test_pop$d130[i]
+  h_tot <- test_pop$h_tot[i]
+  tc.tree <- E_DHx_HmDm_HT.f(Hx=c(0, .5, 1, 1.3, 2:h_tot), Hm=1.3,
+                             Dm=d130, mHt = h_tot, par.lme = Pinus_pinaster_Pattada_all.taper.pars)
+  # diametri predetti
+  d_f <- rbind(d_f, data.frame(id_fusto=i, Hx=tc.tree$Hx, DHx=tc.tree$DHx, d130=d130, h_tot=h_tot))
+}
+
+# normalizzazioni diametri e altezze
+d_f$h_rel <- with(d_f, (h_tot-Hx)/(h_tot-1.3))
+d_f$d_rel <- d_f$DHx/(d_f$d130)
+
+plt <- function(g, st, kt, m=" "){
+  trellis.par.set(list(superpose.line = list(lty = c(1:7), lwd=2)))
+  xyplot(d_rel~h_rel, data=d_f, groups=g, type="l"
+         , main=list(m, cex=2)
+         , panel= function(x, y, ...) {
+               panel.xyplot(x, y, ...)
+               panel.text(0.5, 1.2, labels=st, cex=2, ...)
+               }
+         , xlab=list("distanza dalla cima", cex=1.5)
+         , xlim=c(-.1, 1.3), ylim=c(-.1, 1.3)
+         , scales=list(x=list(at=seq(0, 1.2, .2))
+                       , y=list(at=seq(0, 1.2, .2)))
+         , ylab=list("diametro relativo", cex=1.5)
+         , auto.key = list(cex=2, cex.title=2
+                           , corner=c(1,0), x=.85, y=.08
+                           , title=kt, lines=T, points=F
+                           , lty=c(1:5)))
+}
+
+st <- "ad altezza totale costante (20 m)"
+plt(d_f$d130, st, kt="d 130 [cm]", m="Profili relativi")
+
+##########
+test_pop <- data.frame(h_tot = seq(14, 22, 4))
+test_pop$d130 <- 35
+d_f <- data.frame()
+for(i in 1:nrow(test_pop)) {
+  d130 <- test_pop$d130[i]
+  h_tot <- test_pop$h_tot[i]
+  tc.tree <- E_DHx_HmDm_HT.f(Hx=c(0, .5, 1, 1.3, 2:h_tot), Hm=1.3,
+                             Dm=d130, mHt = h_tot, par.lme = Pinus_pinaster_Pattada_all.taper.pars)
+  # diametri predetti
+  d_f <- rbind(d_f, data.frame(id_fusto=i, Hx=tc.tree$Hx, DHx=tc.tree$DHx, d130=d130, h_tot=h_tot))
+}
+
+# normalizzazioni diametri e altezze
+d_f$h_rel <- with(d_f, (h_tot-Hx)/(h_tot-1.3))
+d_f$d_rel <- d_f$DHx/(d_f$d130)
+
+st <- "a d130 costante (35 cm)"
+plt(d_f$h_tot, st, kt="h tot [m]")
+
+#########
+## ci <- loess(h_tot~d_130, anag)
+test_pop <- data.frame(d_130 = seq(25, 45, 5))
+# test_pop$h_tot <- predict(ci, test_pop)
+test_pop$h_tot <- c(16.5, 17.1, 18, 18.4, 18.9)
+d_f <- data.frame()
+for(i in 1:nrow(test_pop)) {
+  d130 <- test_pop$d_130[i]
+  h_tot <- test_pop$h_tot[i]
+  tc.tree <- E_DHx_HmDm_HT.f(Hx=c(0, .5, 1, 1.3, 2:h_tot), Hm=1.3,
+                             Dm=d130, mHt = h_tot, par.lme = Pinus_pinaster_Pattada_all.taper.pars)
+  # diametri predetti
+  d_f <- rbind(d_f, data.frame(id_fusto=i, Hx=tc.tree$Hx, DHx=tc.tree$DHx, d130=d130, h_tot=h_tot))
+}
+
+# normalizzazioni diametri e altezze
+d_f$h_rel <- with(d_f, (h_tot-Hx)/(h_tot-1.3))
+d_f$d_rel <- d_f$DHx/(d_f$d130)
+
+st <- "ad altezza totale = f(d130)"
+plt(d_f$d130, st, kt="d 130 [cm]")
+
